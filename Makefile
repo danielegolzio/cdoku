@@ -22,3 +22,10 @@ run: all
 	./$(TARGET)
 
 .PHONY: all clean run
+
+install: $(TARGET)
+	install -m 755 $(TARGET) /usr/local/bin/$(TARGET)
+
+uninstall:
+	rm -f /usr/local/bin/$(TARGET)
+
