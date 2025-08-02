@@ -103,7 +103,8 @@ void draw_info(WINDOW *win) {
 	wattroff(win, A_STANDOUT);
 	mvwprintw(win, 3, 1, "- move with arrow keys");
 	mvwprintw(win, 5, 1, "- 'enter' to insert number");
-	mvwprintw(win, 7, 1, "- 'q' to quit");
+	mvwprintw(win, 7, 1, "- 'backspace' to delete number");
+	mvwprintw(win, 9, 1, "- 'q' to quit");
 	box(win, 0, 0);
 	refresh();
 	wrefresh(win);
@@ -135,7 +136,9 @@ void draw_board (WINDOW *win, WINDOW *info, struct cell board[9][9], struct curr
 					mvwprintw(win, i * 2 + 1,  j * 4 + 2, "%d", board[i][j].value);
 				}
 			} else {
+				wattron(win, COLOR_PAIR(1));
 				mvwprintw(win, i * 2 + 1,  j * 4 + 2, "%d", board[i][j].value);
+				wattroff(win, COLOR_PAIR(1));
 			}
 			
 			wattroff(win, A_STANDOUT);
@@ -182,28 +185,77 @@ void handle_key(int key, struct curr *cursor, struct cell board[9][9], WINDOW *w
 			endwin();
 			exit(0);
 
-		case 10: // enter key
+		case 10:	// enter
 			if (board[cursor->r][cursor->c].init == false) {
 				draw_board(win, info, board, *cursor, 1);
 				int num = getch() - '0';
-				if (num >= 1 && num <= 9) {
+				if (num >= 0 && num <= 9) {
 					board[cursor->r][cursor->c].value = num;
 				}
 			}
 			break;
+
+		case KEY_BACKSPACE:
+			if (board[cursor->r][cursor->c].init == false) {
+				board[cursor->r][cursor->c].value = 0;
+			}
 						
 		default: break;
 	}
+}
+
+float get_difficulty (WINDOW *win) {
+	wattron(win, A_STANDOUT);
+	mvwprintw(win, 1, 9, " WELCOME TO CDOKU ");
+	wattroff(win, A_STANDOUT);
+	mvwprintw(win, 3, 1, "ENTER DIFFICULTY WITH KEYBOARD");
+	mvwprintw(win, 5, 1, "- Easy: 1");
+	mvwprintw(win, 7, 1, "- Medium: 2");
+	mvwprintw(win, 9, 1, "- Hard: 3");
+	mvwprintw(win, 11, 1, "- Impossible: 4");
+	box(win, 0, 0);
+	refresh();
+	wrefresh(win);
+
+	int value = getch() - '0';
+	
+	if (value == 1) {
+		return 0.3;
+	} else if (value == 2) {
+		return 0.5;
+	} else if (value == 3) {
+		return 0.7;
+	} else if (value == 4) {
+		return 0.99;
+	} else return 0;
+}
+
+void end_game(WINDOW *win) {
+	clear();
+	wattron(win, A_STANDOUT);
+	mvwprintw(win, 9, 4, " CONGRATULATIONS YOU WIN!!! ");
+	wattroff(win, A_STANDOUT);
+	box(win, 0, 0);
+	refresh();
+	wrefresh(win);
+	getch();
 }
 
 int main(void) {
 	srand(time(NULL));
 
     initscr();
+    start_color();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
     curs_set(0);
+
+    // define color pairs
+    init_pair(1, COLOR_GREEN, COLOR_BLACK); 
+
+	WINDOW *intro = newwin(9 * 2 + 1, 9 * 4 + 1, 0, 0);
+    float difficulty = get_difficulty(intro);
 
 	struct cell solved[9][9];
 
@@ -227,7 +279,7 @@ int main(void) {
     }
 
     // Make board ready to be played
-    init_board(board, 0.4);
+    init_board(board, difficulty);
     
     struct curr cursor = {0, 0};
     int key;
@@ -235,6 +287,7 @@ int main(void) {
 
 	WINDOW *game_win = newwin(9 * 2 + 1, 9 * 4 + 1, 0, 0);
 	WINDOW *info_win = newwin(9 * 2 + 1, 9 * 4 + 1, 0, 9 * 4 + 2);
+	WINDOW *victory = newwin(9 * 2 + 1, 9 * 4 + 1, 0, 0);
 
 	// Game loop
 	while (!gameover) {
@@ -244,7 +297,10 @@ int main(void) {
 		gameover = check_end(board, solved);
 	}
 	
-	draw_board(game_win, info_win, board, cursor, 2);
+	// draw_board(game_win, info_win, board, cursor, 2);
+	end_game(victory);
+	clear();
+	endwin();
     
     return 0;
 }
