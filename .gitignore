@@ -1,0 +1,16 @@
+# Compiled binary
+cdoku
+
+# Object files
+*.o
+
+# Dependency files (optional)
+*.d
+
+# Editor/OS files
+*~
+.DS_Store
+
+# Backup files
+*.bak
+*.swp
