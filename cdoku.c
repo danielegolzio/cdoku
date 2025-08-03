@@ -53,13 +53,25 @@ bool check_cell (struct cell board[9][9], int row, int col, int num) {
 	return true;
 }
 
+void shuffle (int *array) {
+	int n = 9;
+	for (int i = 0; i < n - 1; i++) {
+		int j = i + rand() / (RAND_MAX / (n - i) + 1);
+		int t = array[j];
+		array[j] = array[i];
+		array[i] = t;
+	}
+}
+
 bool solve_board (struct cell board[9][9]) {	
 	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (board[i][j].value == 0) {
-				for (int k = 1; k < 10; k++) {
-					if (check_cell(board, i, j, k)) {
-						board[i][j].value = k;;
+				int numbers[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+				shuffle(numbers); 
+				for (int k = 0; k < 9; k++) {
+					if (check_cell(board, i, j, numbers[k])) {
+						board[i][j].value = numbers[k];
 						if (solve_board(board)) {
 							return true;
 						}
@@ -74,9 +86,10 @@ bool solve_board (struct cell board[9][9]) {
 }
 
 void generate_board (struct cell board[9][9]) {
+	int r = rng(0), c = rng(0);
 	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 9; j++) {
-			board[i][j].value = 0;
+			board[r][c].value = 0;
 		}
 	}
 	
